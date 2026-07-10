@@ -18,23 +18,42 @@ uv sync
 
 此指令會依 `pyproject.toml` 與 `uv.lock` 建立 `.venv`，並安裝 LangGraph、pytest 與 Ruff。
 
-## 2. 執行 Basic Graph
+## 2. 執行客服 FAQ Graph
 
-```powershell
-uv run python examples/basic_graph.py 1
+這個範例模擬客服聊天機器人收到一段使用者問題後，先理解問題，再依關鍵字前往不同的回答 node。
+
+```text
+START -> understand_question
+          |-- payment --> answer_payment --> END
+          |-- return  --> answer_return  --> END
+          `-- unknown --> answer_unknown --> END
 ```
 
-起始值 `1` 會先經過 `increment` 變成 `2`，因此選擇 `double` 分支，最後顯示結果 `4` 與路徑 `increment -> double`。
-
-再執行另一個輸入：
+先詢問付款方式：
 
 ```powershell
-uv run python examples/basic_graph.py 2
+uv run python examples/basic_graph.py "如何付款？"
 ```
 
-起始值 `2` 先變成 `3`，因此選擇 `square` 分支，最後顯示結果 `9` 與路徑 `increment -> square`。
+機器人會回覆「您可以使用信用卡或轉帳付款。」，路徑為 `understand_question -> answer_payment`。
 
-這個範例中，`NumberState` 是共享狀態；node 只回傳要修改的欄位；`path` 使用 reducer 累積每個經過的 node。
+再詢問退貨：
+
+```powershell
+uv run python examples/basic_graph.py "我要退貨"
+```
+
+機器人會回覆「請在收到商品後七天內申請退貨。」，路徑為 `understand_question -> answer_return`。
+
+最後輸入未支援的問題：
+
+```powershell
+uv run python examples/basic_graph.py "門市在哪裡？"
+```
+
+機器人會說明目前只能協助付款或退貨，路徑為 `understand_question -> answer_unknown`。
+
+`FaqState` 保存 `user_message`、`reply` 與 `path`。`understand_question` 是第一個 node；`choose_branch` 是 conditional edge，依「付款」或「退貨」關鍵字選擇下一個 node；`path` 使用 reducer 累積經過的 node。
 
 ## 3. 執行 Checkpoint Graph
 

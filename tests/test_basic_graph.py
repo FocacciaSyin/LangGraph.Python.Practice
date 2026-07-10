@@ -3,18 +3,31 @@ import pytest
 from langgraph_python_practice.basic_graph import run_basic_graph
 
 
-def test_even_value_after_increment_uses_double_branch() -> None:
-    result = run_basic_graph(1)
-
-    assert result == {"value": 4, "path": ["increment", "double"]}
-
-
-def test_odd_value_after_increment_uses_square_branch() -> None:
-    result = run_basic_graph(2)
-
-    assert result == {"value": 9, "path": ["increment", "square"]}
+def test_payment_question_routes_to_payment_answer() -> None:
+    assert run_basic_graph("如何付款？") == {
+        "user_message": "如何付款？",
+        "reply": "您可以使用信用卡或轉帳付款。",
+        "path": ["understand_question", "answer_payment"],
+    }
 
 
-def test_non_integer_input_is_rejected() -> None:
-    with pytest.raises(TypeError, match="value must be an integer"):
-        run_basic_graph("2")  # type: ignore[arg-type]
+def test_return_question_routes_to_return_answer() -> None:
+    assert run_basic_graph("我要退貨") == {
+        "user_message": "我要退貨",
+        "reply": "請在收到商品後七天內申請退貨。",
+        "path": ["understand_question", "answer_return"],
+    }
+
+
+def test_unknown_question_routes_to_unknown_answer() -> None:
+    assert run_basic_graph("門市在哪裡？") == {
+        "user_message": "門市在哪裡？",
+        "reply": "我目前可以協助付款或退貨問題。",
+        "path": ["understand_question", "answer_unknown"],
+    }
+
+
+@pytest.mark.parametrize("user_message", ["", "   ", 1])
+def test_empty_or_non_string_question_is_rejected(user_message: object) -> None:
+    with pytest.raises(TypeError, match="user_message must be a non-empty string"):
+        run_basic_graph(user_message)  # type: ignore[arg-type]
