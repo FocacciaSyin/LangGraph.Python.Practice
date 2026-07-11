@@ -13,3 +13,5 @@ build/
 *.egg-info/
 .idea/
 .vscode/
+.worktrees/
+.superpowers/
